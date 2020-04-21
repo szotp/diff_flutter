@@ -1,14 +1,46 @@
 # diff_flutter
 
-A new Flutter package project.
+Automatically animates list using a diff alghoritm.
 
-## Getting Started
+## Example
 
-This project is a starting point for a Dart
-[package](https://flutter.dev/developing-packages/),
-a library module containing code that can be shared easily across
-multiple Flutter or Dart projects.
+Use your favorite state management to modify contents of a list, and then simply provide copies of that list to the widget.
 
-For help getting started with Flutter, view our 
-[online documentation](https://flutter.dev/docs), which offers tutorials, 
-samples, guidance on mobile development, and a full API reference.
+```dart
+SliverDiffAnimatedList<int>(
+  items: _items.toList(),
+  itemBuilder: (context, item, i) {
+    return ListTile(
+      title: Text(item.toString()),
+    );
+  },
+)
+```
+
+## Customizations
+
+Widget provides few optional parameters to customize the animation:
+
+```dart
+SliverDiffAnimatedList<int>(
+  items: _items.toList(),
+  itemBuilder: (context, item, i) {
+    return ListTile(
+      title: Text(item.toString()),
+    );
+  },
+  // use default animation with custom curve
+  transition: (child, animation, isDelete) =>
+      SliverDiffAnimatedList.buildSizeTransition(
+    child,
+    CurvedAnimation(parent: animation, curve: Curves.easeInOut),
+    isDelete,
+  ),
+  insertDuration: const Duration(milliseconds: 500),
+  removeDuration: const Duration(milliseconds: 200),
+);
+```
+
+## Alghoritm
+
+This package uses algorithm published in "An O(ND) Difference Algorithm and its Variations" by Eugene Myers. Code was ported from C# available at http://www.mathertel.de/Diff/.

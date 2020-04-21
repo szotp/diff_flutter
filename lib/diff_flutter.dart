@@ -3,17 +3,24 @@ library diff_flutter;
 import 'package:flutter/widgets.dart';
 import 'package:diff/diff.dart';
 
-typedef DiffAnimatedTransitionFunc = Widget Function({
+typedef DiffAnimatedTransitionFunc = Widget Function(
   Widget child,
   Animation<double> animation,
   bool delete,
-});
+);
 
 class SliverDiffAnimatedList<T> extends StatefulWidget {
+  /// Passed items must not be modified afterwards.
   final List<T> items;
   final Widget Function(BuildContext, T, int) itemBuilder;
+
+  /// Provides animation for insert/delete. SizeTransition+FadeTransition by default.
   final DiffAnimatedTransitionFunc transition;
+
+  /// Default: 300 msec
   final Duration insertDuration;
+
+  /// Default: 300 msec
   final Duration removeDuration;
 
   const SliverDiffAnimatedList({
@@ -30,7 +37,10 @@ class SliverDiffAnimatedList<T> extends StatefulWidget {
       _SliverDiffAnimatedListState<T>();
 
   static Widget buildSizeTransition(
-      {Widget child, Animation<double> animation, bool delete}) {
+    Widget child,
+    Animation<double> animation,
+    bool isDelete,
+  ) {
     return SizeTransition(
       sizeFactor: animation,
       child: FadeTransition(
@@ -58,6 +68,10 @@ class _SliverDiffAnimatedListState<T> extends State<SliverDiffAnimatedList<T>> {
   void didUpdateWidget(SliverDiffAnimatedList<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
 
+    if (oldWidget.items == _current) {
+      return;
+    }
+
     int offset = 0;
 
     _current.diff(widget.items).apply(
@@ -71,9 +85,9 @@ class _SliverDiffAnimatedListState<T> extends State<SliverDiffAnimatedList<T>> {
             return IgnorePointer(
               ignoring: true,
               child: widget.transition(
-                animation: animation,
-                child: child,
-                delete: true,
+                child,
+                animation,
+                true,
               ),
             );
           },
@@ -89,7 +103,7 @@ class _SliverDiffAnimatedListState<T> extends State<SliverDiffAnimatedList<T>> {
   }
 
   void _saveCurrent() {
-    _current = widget.items.toList();
+    _current = widget.items;
   }
 
   @override
@@ -100,9 +114,9 @@ class _SliverDiffAnimatedListState<T> extends State<SliverDiffAnimatedList<T>> {
       itemBuilder: (context, i, animation) {
         final child = widget.itemBuilder(context, _current[i], i);
         return widget.transition(
-          animation: animation,
-          child: child,
-          delete: false,
+          child,
+          animation,
+          false,
         );
       },
     );

@@ -39,7 +39,7 @@ packages:
   diff:
     dependency: transitive
     description:
-      path: "../../diff"
+      path: "../diff"
       relative: true
     source: path
     version: "0.0.0"

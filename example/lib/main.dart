@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:diff_flutter/diff_flutter.dart';
 
@@ -22,7 +24,20 @@ class ExamplePage extends StatefulWidget {
 }
 
 class _ExamplePageState extends State<ExamplePage> {
+  final _random = Random();
   final List<int> _items = [];
+
+  void _addItem() {
+    setState(() {
+      _items.add(DateTime.now().hashCode);
+    });
+  }
+
+  void _removeItem() {
+    setState(() {
+      _items.removeAt(_random.nextInt(_items.length));
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,32 +46,46 @@ class _ExamplePageState extends State<ExamplePage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () {
-              setState(() {
-                _items.add(DateTime.now().hashCode);
-              });
-            },
-          )
+            onPressed: _addItem,
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: _removeItem,
+          ),
         ],
       ),
       body: CustomScrollView(
         slivers: [
           SliverDiffAnimatedList<int>(
-            items: _items,
+            items: _items.toList(),
             itemBuilder: (context, item, i) {
               return ListTile(
                 title: Text(item.toString()),
-                onTap: () {
-                  setState(() {
-                    assert(_items.indexOf(item) == i);
-                    _items.removeAt(i);
-                  });
-                },
               );
             },
           )
         ],
       ),
+    );
+  }
+
+  Widget buildAdvanced() {
+    return SliverDiffAnimatedList<int>(
+      items: _items.toList(),
+      itemBuilder: (context, item, i) {
+        return ListTile(
+          title: Text(item.toString()),
+        );
+      },
+      // use default animation with custom curve
+      transition: (child, animation, isDelete) =>
+          SliverDiffAnimatedList.buildSizeTransition(
+        child,
+        CurvedAnimation(parent: animation, curve: Curves.easeInOut),
+        isDelete,
+      ),
+      insertDuration: const Duration(milliseconds: 500),
+      removeDuration: const Duration(milliseconds: 200),
     );
   }
 }
