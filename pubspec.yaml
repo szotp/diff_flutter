@@ -1,0 +1,23 @@
+name: diff_flutter
+description: A new Flutter package project.
+version: 0.0.1
+author:
+homepage:
+
+environment:
+  sdk: ">=2.7.0 <3.0.0"
+
+dependencies:
+  diff:
+    path: ../diff
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  lint: any
+  flutter_test:
+    sdk: flutter
+
+dependency_overrides:
+  diff:
+    path: ../diff
