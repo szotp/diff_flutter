@@ -35,7 +35,9 @@ class _ExamplePageState extends State<ExamplePage> {
 
   void _removeItem() {
     setState(() {
-      _items.removeAt(_random.nextInt(_items.length));
+      if (_items.isNotEmpty) {
+        _items.removeAt(_random.nextInt(_items.length));
+      }
     });
   }
 
@@ -54,16 +56,22 @@ class _ExamplePageState extends State<ExamplePage> {
           ),
         ],
       ),
-      body: CustomScrollView(
-        slivers: [
-          SliverDiffAnimatedList<int>(
-            items: _items.toList(),
-            itemBuilder: (context, item, i) {
-              return ListTile(
-                title: Text(item.toString()),
-              );
-            },
-          )
+      body: Column(
+        children: [
+          Expanded(
+            child: CustomScrollView(
+              slivers: [
+                SliverDiffAnimatedList<int>(
+                  items: _items.toList(),
+                  itemBuilder: (context, item, i) {
+                    return ListTile(
+                      title: Text(item.toString()),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

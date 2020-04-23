@@ -4,3 +4,4 @@ linter:
   rules:
     # DiffAnimatedTransitionFunc requires unnamed bool parameter for usability
     avoid_positional_boolean_parameters: false
+    avoid_print: false

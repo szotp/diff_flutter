@@ -68,7 +68,7 @@ class _SliverDiffAnimatedListState<T> extends State<SliverDiffAnimatedList<T>> {
   void didUpdateWidget(SliverDiffAnimatedList<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (oldWidget.items == _current) {
+    if (oldWidget.items == widget.items) {
       return;
     }
 

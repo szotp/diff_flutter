@@ -1,4 +1,3 @@
-import 'dart:collection';
 import 'dart:typed_data';
 
 // Original source: http://www.mathertel.de/Diff/ViewSrc.aspx
@@ -10,11 +9,22 @@ class _ShortestMiddleSnake {
   int x, y;
 }
 
-class _DiffData extends UnmodifiableListView {
+class _DiffData {
   Int8List modified;
+  final Int32List data;
+  int length;
 
-  _DiffData(List data) : super(data) {
-    modified = Int8List(data.length + 2);
+  _DiffData(this.data)
+      : length = data.length,
+        modified = Int8List(data.length + 2);
+
+  // ignore: prefer_constructors_over_static_methods
+  static _DiffData create<T>(List<T> list, int Function(T) identity) {
+    final ints = Int32List(list.length);
+    for (int i = 0; i < list.length; i++) {
+      ints[i] = identity(list[i]);
+    }
+    return _DiffData(ints);
   }
 }
 
@@ -32,8 +42,10 @@ class DiffItem {
   }
 }
 
+int _getHashcode<T>(T item) => item.hashCode;
+
 extension Diff<T> on List<T> {
-  List<DiffItem> diff(List<T> target, {int Function(T) identity}) {
+  List<DiffItem> diff(List<T> target, [int Function(T) identity]) {
     Stopwatch watch;
 
     assert(() {
@@ -45,13 +57,12 @@ extension Diff<T> on List<T> {
       return true;
     }());
 
-    final dataA = _DiffData(identity != null ? map(identity).toList() : this);
-    final dataB =
-        _DiffData(identity != null ? target.map(identity).toList() : target);
+    final dataA = _DiffData.create(this, identity ?? _getHashcode);
+    final dataB = _DiffData.create(target, identity ?? _getHashcode);
 
     final max = dataA.length + dataB.length + 1;
-    final downVector = Int64List(2 * max + 2);
-    final upVector = Int64List(2 * max + 2);
+    final downVector = Int32List(2 * max + 2);
+    final upVector = Int32List(2 * max + 2);
 
     longestCommonSubsequence(
         dataA, 0, dataA.length, dataB, 0, dataB.length, downVector, upVector);
@@ -100,8 +111,8 @@ _ShortestMiddleSnake findShortestMiddleSnake(
     _DiffData dataB,
     int lowerB,
     int upperB,
-    Int64List downVector,
-    Int64List upVector) {
+    Int32List downVector,
+    Int32List upVector) {
   final ret = _ShortestMiddleSnake();
   final max = dataA.length + dataB.length + 1;
 
@@ -142,7 +153,7 @@ _ShortestMiddleSnake findShortestMiddleSnake(
       y = x - k;
 
       // find the end of the furthest reaching forward D-path in diagonal k.
-      while ((x < upperA) && (y < upperB) && (dataA[x] == dataB[y])) {
+      while ((x < upperA) && (y < upperB) && (dataA.data[x] == dataB.data[y])) {
         x++;
         y++;
       }
@@ -177,7 +188,9 @@ _ShortestMiddleSnake findShortestMiddleSnake(
       } // if
       y = x - k;
 
-      while ((x > lowerA) && (y > lowerB) && (dataA[x - 1] == dataB[y - 1])) {
+      while ((x > lowerA) &&
+          (y > lowerB) &&
+          (dataA.data[x - 1] == dataB.data[y - 1])) {
         x--;
         y--; // diagonal
       }
@@ -208,15 +221,17 @@ void longestCommonSubsequence(
     _DiffData dataB,
     int _lowerB,
     int _upperB,
-    Int64List downVector,
-    Int64List upVector) {
+    Int32List downVector,
+    Int32List upVector) {
   int lowerA = _lowerA;
   int upperA = _upperA;
   int lowerB = _lowerB;
   int upperB = _upperB;
 
   // Fast walkthrough equal lines at the start
-  while (lowerA < upperA && lowerB < upperB && dataA[lowerA] == dataB[lowerB]) {
+  while (lowerA < upperA &&
+      lowerB < upperB &&
+      dataA.data[lowerA] == dataB.data[lowerB]) {
     lowerA++;
     lowerB++;
   }
@@ -224,7 +239,7 @@ void longestCommonSubsequence(
   // Fast walkthrough equal lines at the end
   while (lowerA < upperA &&
       lowerB < upperB &&
-      dataA[upperA - 1] == dataB[upperB - 1]) {
+      dataA.data[upperA - 1] == dataB.data[upperB - 1]) {
     --upperA;
     --upperB;
   }
