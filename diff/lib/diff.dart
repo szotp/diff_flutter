@@ -2,17 +2,19 @@ import 'dart:typed_data';
 
 // Original source: http://www.mathertel.de/Diff/ViewSrc.aspx
 
-bool debugPrintDiffDuration = false;
-
 /// shortest middle snake return date
 class _ShortestMiddleSnake {
-  int x, y;
+  final int x, y;
+
+  const _ShortestMiddleSnake(this.x, this.y);
 }
 
 class _DiffData {
-  Int8List modified;
+  final Int8List modified;
   final Int32List data;
-  int length;
+  final int length;
+
+  int rx, ry;
 
   _DiffData(this.data)
       : length = data.length,
@@ -42,23 +44,13 @@ class DiffItem {
   }
 }
 
-int _getHashcode<T>(T item) => item.hashCode;
+extension ListDiffExtension<T> on List<T> {
+  static int _getHashcode(item) => item.hashCode;
 
-extension Diff<T> on List<T> {
-  List<DiffItem> diff(List<T> target, [int Function(T) identity]) {
-    Stopwatch watch;
-
-    assert(() {
-      if (debugPrintDiffDuration) {
-        watch = Stopwatch();
-        watch.start();
-      }
-
-      return true;
-    }());
-
-    final dataA = _DiffData.create(this, identity ?? _getHashcode);
-    final dataB = _DiffData.create(target, identity ?? _getHashcode);
+  List<DiffItem> diff(List<T> target,
+      [int Function(T) identity = _getHashcode]) {
+    final dataA = _DiffData.create(this, identity);
+    final dataB = _DiffData.create(target, identity);
 
     final max = dataA.length + dataB.length + 1;
     final downVector = Int32List(2 * max + 2);
@@ -67,17 +59,6 @@ extension Diff<T> on List<T> {
     longestCommonSubsequence(
         dataA, 0, dataA.length, dataB, 0, dataB.length, downVector, upVector);
     final result = createDiffs(dataA, dataB);
-
-    assert(() {
-      if (debugPrintDiffDuration) {
-        watch.stop();
-        // ignore: avoid_print
-        print(
-            'Diff with ${result.length} changes, ${target.length} items, took ${watch.elapsedMicroseconds} microseconds');
-      }
-
-      return true;
-    }());
 
     return result;
   }
@@ -113,7 +94,8 @@ _ShortestMiddleSnake findShortestMiddleSnake(
     int upperB,
     Int32List downVector,
     Int32List upVector) {
-  final ret = _ShortestMiddleSnake();
+  int rx;
+  int ry;
   final max = dataA.length + dataB.length + 1;
 
   final downK = lowerA - lowerB; // the k-line to start the forward search
@@ -162,11 +144,11 @@ _ShortestMiddleSnake findShortestMiddleSnake(
       // overlap ?
       if (oddDelta && (upK - D < k) && (k < upK + D)) {
         if (upVector[upOffset + k] <= downVector[downOffset + k]) {
-          ret.x = downVector[downOffset + k];
-          ret.y = downVector[downOffset + k] - k;
+          rx = downVector[downOffset + k];
+          ry = downVector[downOffset + k] - k;
           // ret.u = UpVector[UpOffset + k];      // 2002.09.20: no need for 2 points
           // ret.v = UpVector[UpOffset + k] - k;
-          return ret;
+          return _ShortestMiddleSnake(rx, ry);
         } // if
       } // if
 
@@ -199,11 +181,11 @@ _ShortestMiddleSnake findShortestMiddleSnake(
       // overlap ?
       if (!oddDelta && (downK - D <= k) && (k <= downK + D)) {
         if (upVector[upOffset + k] <= downVector[downOffset + k]) {
-          ret.x = downVector[downOffset + k];
-          ret.y = downVector[downOffset + k] - k;
+          rx = downVector[downOffset + k];
+          ry = downVector[downOffset + k] - k;
           // ret.u = UpVector[UpOffset + k];     // 2002.09.20: no need for 2 points
           // ret.v = UpVector[UpOffset + k] - k;
-          return ret;
+          return _ShortestMiddleSnake(rx, ry);
         } // if
       } // if
 
